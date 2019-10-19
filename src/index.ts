@@ -77,22 +77,22 @@ for (let i = 0; i < numberOfWorkers; i++) {
     inspectorWorkerScheduleList[i].worker = inspectorWorker;
 }
 
-let currentDay = 1;
-
-// loop through by priority
-areaList.areas.forEach((area: Area) => {
+// loop through sorted areas, which are sorted by number of cases in area
+areaList.getSortedAreas().forEach((area: Area) => {
     area.points.forEach((point: Point) => {
+        // loop through days
+        let currentDay = 1;
         let availableWorkerSchedule: WorkSchedule = null;
-        inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
-            if (inspectorWorkerSchedule.canWork(currentDay, point)) {
-                availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, point);
-                return;
-            }
-        });
-        if (availableWorkerSchedule) {
-            // there is worker for that day
-        } else {
-            // no worker
+
+        while (availableWorkerSchedule === null) {
+            inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
+                if (inspectorWorkerSchedule.canWork(currentDay, point)) {
+                    availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, point);
+                    return;
+                }
+            });
+            // go next day since no workers can work on the current day
+            currentDay++;
         }
     });
 });
