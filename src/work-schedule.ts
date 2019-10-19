@@ -3,7 +3,7 @@ import {InspectorWorker} from "./inspector-worker";
 import {Point} from "./point";
 
 export class WorkSchedule {
-    public workDataList: Set<WorkData>;
+    public workDataList: Set<WorkData> = new Set<WorkData>();
     public worker: InspectorWorker;
     public maxWorkHoursPerDay: number = 8;
 
