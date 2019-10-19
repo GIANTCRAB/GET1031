@@ -33,7 +33,7 @@ pointList.forEach((point: Point) => {
             outputData.push([
                 point.name,
                 secondPoint.name,
-                (point.distanceTo(secondPoint) * 50).toString()
+                (point.distanceTo(secondPoint) * 50).toFixed(2).toString()
             ]);
         }
     });
