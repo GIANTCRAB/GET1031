@@ -2,6 +2,8 @@ import * as fs from "fs";
 import * as stringify from "csv-stringify";
 import {Point} from "./point";
 import {CsvParser} from "./csv-parser";
+import {InspectorWorker} from "./inspector-worker";
+import {AreaList} from "./area-list";
 
 
 // populate all points
@@ -26,17 +28,32 @@ preParsedText.forEach((value: string[]) => {
     }
 });
 
+// TODO: Add inspection hours and number of cases to point list
+
+// TODO:
+
+// Generate distance table
+
+const areaList: AreaList = new AreaList();
 const outputData: string[][] = [];
 pointList.forEach((point: Point) => {
     pointList.forEach((secondPoint: Point) => {
+        const calculatedDistance = (point.distanceTo(secondPoint) * 150);
+        // Add the point the areaList
+        areaList.addPoint(secondPoint);
         if (point !== secondPoint) {
             outputData.push([
                 point.name,
                 secondPoint.name,
-                (point.distanceTo(secondPoint) * 50).toFixed(2).toString()
+                calculatedDistance.toFixed(2)
             ]);
         }
     });
+});
+
+fs.writeFile('data.json', JSON.stringify(areaList.toArray()), (err) => {
+    if (err) throw err;
+    console.log('area saved.');
 });
 
 stringify(outputData, {}, (err, output) => {
@@ -46,3 +63,17 @@ stringify(outputData, {}, (err, output) => {
         console.log('my.csv saved.');
     });
 });
+
+
+// Generate workers
+const MAX_HOURS = 8;
+const numberOfWorkers = 2;
+
+const inspectorWorkerList: InspectorWorker[] = [];
+for (let i = 0; i < numberOfWorkers; i++) {
+    const inspectorWorker: InspectorWorker = new InspectorWorker();
+    inspectorWorker.id = i + 1;
+    inspectorWorkerList.push(inspectorWorker);
+}
+
+// Generate schedule
