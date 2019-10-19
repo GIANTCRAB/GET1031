@@ -92,11 +92,13 @@ areaList.getSortedAreas().forEach((area: Area) => {
         let availableWorkerSchedule: WorkSchedule = null;
 
         while (availableWorkerSchedule === null) {
-            inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
+            inspectorWorkerScheduleList.every((inspectorWorkerSchedule: WorkSchedule) => {
                 if (inspectorWorkerSchedule.canWork(currentDay, point)) {
                     availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, point);
-                    return;
+                    return false;
                 }
+
+                return true;
             });
             // go next day since no workers can work on the current day
             currentDay++;
