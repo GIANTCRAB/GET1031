@@ -20,11 +20,15 @@ preParsedText.forEach((value: string[]) => {
     if (!(typeof value[0] === 'undefined' || typeof value[1] === 'undefined')) {
         const pointToAdd: Point = new Point();
         // first column is name
-        // second column is "x,y"
         pointToAdd.name = value[0];
+        // second column is "x,y"
         const coordinates: string[] = value[1].split(",");
         pointToAdd.x = Number(coordinates[0]);
         pointToAdd.y = Number(coordinates[1]);
+        // third column is hours to inspect location
+        pointToAdd.hoursRequiredToInspect = Number(value[2]);
+        // fourth column is number of dengue cases
+        pointToAdd.numberOfCase = Number(value[3]);
 
         pointList.push(pointToAdd);
     }
@@ -74,7 +78,9 @@ const inspectorWorkerScheduleList: WorkSchedule[] = [];
 for (let i = 0; i < numberOfWorkers; i++) {
     const inspectorWorker: InspectorWorker = new InspectorWorker();
     inspectorWorker.id = i + 1;
-    inspectorWorkerScheduleList[i].worker = inspectorWorker;
+    const inspectorWorkerSchedule: WorkSchedule = new WorkSchedule();
+    inspectorWorkerSchedule.worker = inspectorWorker;
+    inspectorWorkerScheduleList.push(inspectorWorkerSchedule);
 }
 
 // loop through sorted areas, which are sorted by number of cases in area
@@ -98,3 +104,4 @@ areaList.getSortedAreas().forEach((area: Area) => {
 });
 
 // Generate schedule
+console.log(inspectorWorkerScheduleList);
