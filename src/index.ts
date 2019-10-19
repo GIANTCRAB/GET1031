@@ -35,12 +35,7 @@ preParsedText.forEach((value: string[]) => {
     }
 });
 
-// TODO: Add inspection hours and number of cases to point list
-
-// TODO:
-
 // Generate distance table
-
 const areaList: AreaList = new AreaList();
 const outputData: string[][] = [];
 pointList.forEach((point: Point) => {
