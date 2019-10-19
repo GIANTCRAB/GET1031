@@ -29,4 +29,21 @@ export class WorkSchedule {
         this.workDataList = this.workDataList.add(workData);
         return this;
     }
+
+    /**
+     * Sort by day
+     */
+    public getSortedWorkData(): WorkData[] {
+        return Array.from(this.workDataList)
+            .sort((a: WorkData, b: WorkData) => {
+                if (a.day < b.day) {
+                    return -1;
+                }
+                if (a.day > b.day) {
+                    return 1;
+                }
+                // a must be equal to b
+                return 0;
+            });
+    }
 }
