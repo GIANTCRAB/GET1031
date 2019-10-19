@@ -6,6 +6,7 @@ import {InspectorWorker} from "./inspector-worker";
 import {AreaList} from "./area-list";
 import {Area} from "./area";
 import {WorkSchedule} from "./work-schedule";
+import {WorkData} from "./work-data";
 
 
 // populate all points
@@ -104,4 +105,32 @@ areaList.getSortedAreas().forEach((area: Area) => {
 });
 
 // Generate schedule
-console.log(inspectorWorkerScheduleList);
+const scheduleData: string[][] = [];
+inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
+    const workerData: string[] = [
+        inspectorWorkerSchedule.worker.id.toString()
+    ];
+    let startingDay = 1;
+    let startingColumn = [];
+    inspectorWorkerSchedule.getSortedWorkData().forEach((sortedWorkData: WorkData) => {
+        if (sortedWorkData.day !== startingDay) {
+            workerData.push(startingColumn.join(","));
+            startingColumn = [];
+            // start a new
+            startingDay = sortedWorkData.day;
+        }
+
+        startingColumn.push(sortedWorkData.point.name);
+    });
+    workerData.push(startingColumn.join(","));
+
+    scheduleData.push(workerData);
+});
+
+stringify(scheduleData, {}, (err, output) => {
+    if (err) throw err;
+    fs.writeFile('schedule.csv', output, (err) => {
+        if (err) throw err;
+        console.log('schedule.csv saved.');
+    });
+});
