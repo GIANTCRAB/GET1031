@@ -1,3 +1,7 @@
+# GET1031
+
+This project is used for our school project where we calculate distances from point to point. Currently, it is very slow with a `O(n^2)` peformance and has duplicate records.
+
 ## How To Use
 
 Install Node dependencies
