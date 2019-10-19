@@ -40,4 +40,17 @@ export class AreaList {
 
         return combinedArray;
     }
+
+    public getSortedAreas(): Area[] {
+        return Array.from(this.areas).sort((a: Area, b: Area) => {
+            if (a.getAreaCases() < b.getAreaCases()) {
+                return -1;
+            }
+            if (a.getAreaCases() > b.getAreaCases()) {
+                return 1;
+            }
+            // a must be equal to b
+            return 0;
+        });
+    }
 }
