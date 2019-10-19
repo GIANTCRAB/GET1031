@@ -66,7 +66,6 @@ stringify(outputData, {}, (err, output) => {
 
 
 // Generate workers
-const MAX_HOURS = 8;
 const numberOfWorkers = 2;
 
 const inspectorWorkerList: InspectorWorker[] = [];
