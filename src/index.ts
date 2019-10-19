@@ -4,6 +4,8 @@ import {Point} from "./point";
 import {CsvParser} from "./csv-parser";
 import {InspectorWorker} from "./inspector-worker";
 import {AreaList} from "./area-list";
+import {Area} from "./area";
+import {WorkSchedule} from "./work-schedule";
 
 
 // populate all points
@@ -68,11 +70,31 @@ stringify(outputData, {}, (err, output) => {
 // Generate workers
 const numberOfWorkers = 2;
 
-const inspectorWorkerList: InspectorWorker[] = [];
+const inspectorWorkerScheduleList: WorkSchedule[] = [];
 for (let i = 0; i < numberOfWorkers; i++) {
     const inspectorWorker: InspectorWorker = new InspectorWorker();
     inspectorWorker.id = i + 1;
-    inspectorWorkerList.push(inspectorWorker);
+    inspectorWorkerScheduleList[i].worker = inspectorWorker;
 }
+
+let currentDay = 1;
+
+// loop through by priority
+areaList.areas.forEach((area: Area) => {
+    area.points.forEach((point: Point) => {
+        let availableWorkerSchedule: WorkSchedule = null;
+        inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
+            if (inspectorWorkerSchedule.canWork(currentDay, point)) {
+                availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, point);
+                return;
+            }
+        });
+        if (availableWorkerSchedule) {
+            // there is worker for that day
+        } else {
+            // no worker
+        }
+    });
+});
 
 // Generate schedule
