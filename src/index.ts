@@ -68,7 +68,7 @@ stringify(outputData, {}, (err, output) => {
 
 
 // Generate workers
-const numberOfWorkers = 2;
+const numberOfWorkers = 5;
 
 const inspectorWorkerScheduleList: WorkSchedule[] = [];
 for (let i = 0; i < numberOfWorkers; i++) {
@@ -78,6 +78,14 @@ for (let i = 0; i < numberOfWorkers; i++) {
     inspectorWorkerSchedule.worker = inspectorWorker;
     inspectorWorkerScheduleList.push(inspectorWorkerSchedule);
 }
+
+stringify(areaList.toArray(), {}, (err, output) => {
+    if (err) throw err;
+    fs.writeFile('sorted.csv', output, (err) => {
+        if (err) throw err;
+        console.log('sorted.csv saved.');
+    });
+});
 
 // loop through sorted areas, which are sorted by number of cases in area
 areaList.getSortedAreas().forEach((area: Area) => {
@@ -89,7 +97,7 @@ areaList.getSortedAreas().forEach((area: Area) => {
         while (availableWorkerSchedule === null) {
             inspectorWorkerScheduleList.every((inspectorWorkerSchedule: WorkSchedule) => {
                 if (inspectorWorkerSchedule.canWork(currentDay, point)) {
-                    availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, point);
+                    availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, area, point);
                     return false;
                 }
 
@@ -117,7 +125,7 @@ inspectorWorkerScheduleList.forEach((inspectorWorkerSchedule: WorkSchedule) => {
             startingDay = sortedWorkData.day;
         }
 
-        startingColumn.push(sortedWorkData.point.name);
+        startingColumn.push(sortedWorkData.area.name + ": " + sortedWorkData.point.name);
     });
     workerData.push(startingColumn.join(","));
 

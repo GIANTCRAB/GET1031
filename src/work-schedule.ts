@@ -1,6 +1,7 @@
 import {WorkData} from "./work-data";
 import {InspectorWorker} from "./inspector-worker";
 import {Point} from "./point";
+import {Area} from "./area";
 
 export class WorkSchedule {
     public workDataList: Set<WorkData> = new Set<WorkData>();
@@ -22,9 +23,10 @@ export class WorkSchedule {
         return totalWorkHoursForDay;
     }
 
-    public work(day: number, point: Point): WorkSchedule {
+    public work(day: number, area: Area, point: Point): WorkSchedule {
         const workData: WorkData = new WorkData();
         workData.day = day;
+        workData.area = area;
         workData.point = point;
         this.workDataList = this.workDataList.add(workData);
         return this;
