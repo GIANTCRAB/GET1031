@@ -15,6 +15,7 @@ export class AreaList {
             this.addArea(area.addPoint(point));
         } else {
             const newArea: Area = new Area();
+            newArea.name = "A" + this.areas.size.toString();
             this.addArea(newArea.addPoint(point));
         }
 
@@ -36,7 +37,7 @@ export class AreaList {
 
     public toArray(): Point[][] {
         const combinedArray: Point[][] = [];
-        this.areas.forEach((area: Area) => combinedArray.push(area.toArray()));
+        this.getSortedAreas().forEach((area: Area) => combinedArray.push(area.toArray()));
 
         return combinedArray;
     }
@@ -44,10 +45,12 @@ export class AreaList {
     public getSortedAreas(): Area[] {
         return Array.from(this.areas).sort((a: Area, b: Area) => {
             if (a.getAreaCases() < b.getAreaCases()) {
-                return -1;
+                // push it down since it has lesser cases
+                return 1;
             }
             if (a.getAreaCases() > b.getAreaCases()) {
-                return 1;
+                // push it up since it has more cases
+                return -1;
             }
             // a must be equal to b
             return 0;
