@@ -71,19 +71,22 @@ stringify(outputData, {}, (err, output) => {
 
 // Generate distance table for area
 const areaOutputData: string[][] = [];
-const areaListAreasCopy = areaList.areas;
+let areaListAreasCopy = areaList.getSortedAreas();
 areaList.areas.forEach((area: Area) => {
     areaListAreasCopy.forEach((otherArea: Area) => {
         if (area !== otherArea) {
             const calculatedDistance = area.distanceTo(otherArea);
+            const travelTime = area.travelTimeTo(otherArea);
             areaOutputData.push([
                 area.name,
                 otherArea.name,
-                calculatedDistance.toFixed(2)
+                calculatedDistance.toFixed(2),
+                travelTime.toString()
             ]);
         }
     });
-    areaListAreasCopy.delete(area);
+    // Remove it from list since it is already in distance table
+    areaListAreasCopy = areaListAreasCopy.filter(item => item !== area);
 });
 
 stringify(areaOutputData, {}, (err, output) => {
@@ -96,7 +99,7 @@ stringify(areaOutputData, {}, (err, output) => {
 
 
 // Generate workers
-const numberOfWorkers = 2;
+const numberOfWorkers = 5;
 
 const inspectorWorkerScheduleList: WorkSchedule[] = [];
 for (let i = 0; i < numberOfWorkers; i++) {
@@ -124,7 +127,7 @@ areaList.getSortedAreas().forEach((area: Area) => {
 
         while (availableWorkerSchedule === null) {
             inspectorWorkerScheduleList.every((inspectorWorkerSchedule: WorkSchedule) => {
-                if (inspectorWorkerSchedule.canWork(currentDay, point)) {
+                if (inspectorWorkerSchedule.canWork(currentDay, area, point)) {
                     availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, area, point);
                     return false;
                 }
