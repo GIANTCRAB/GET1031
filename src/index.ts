@@ -38,8 +38,9 @@ preParsedText.forEach((value: string[]) => {
 // Generate distance table
 const areaList: AreaList = new AreaList();
 const outputData: string[][] = [];
+let pointListCopy = pointList;
 pointList.forEach((point: Point) => {
-    pointList.forEach((secondPoint: Point) => {
+    pointListCopy.forEach((secondPoint: Point) => {
         const calculatedDistance = (point.distanceTo(secondPoint) * 150);
         // Add the point the areaList
         areaList.addPoint(secondPoint);
@@ -51,6 +52,8 @@ pointList.forEach((point: Point) => {
             ]);
         }
     });
+    // Remove it from list since it is already in distance table
+    pointListCopy = pointListCopy.filter(item => item !== point);
 });
 
 fs.writeFile('data.json', JSON.stringify(areaList.toArray()), (err) => {
@@ -60,15 +63,40 @@ fs.writeFile('data.json', JSON.stringify(areaList.toArray()), (err) => {
 
 stringify(outputData, {}, (err, output) => {
     if (err) throw err;
-    fs.writeFile('my.csv', output, (err) => {
+    fs.writeFile('distance-table.csv', output, (err) => {
         if (err) throw err;
-        console.log('my.csv saved.');
+        console.log('distance-table.csv saved.');
+    });
+});
+
+// Generate distance table for area
+const areaOutputData: string[][] = [];
+const areaListAreasCopy = areaList.areas;
+areaList.areas.forEach((area: Area) => {
+    areaListAreasCopy.forEach((otherArea: Area) => {
+        if (area !== otherArea) {
+            const calculatedDistance = area.distanceTo(otherArea);
+            areaOutputData.push([
+                area.name,
+                otherArea.name,
+                calculatedDistance.toFixed(2)
+            ]);
+        }
+    });
+    areaListAreasCopy.delete(area);
+});
+
+stringify(areaOutputData, {}, (err, output) => {
+    if (err) throw err;
+    fs.writeFile('area-distance-table.csv', output, (err) => {
+        if (err) throw err;
+        console.log('area-distance-table.csv saved.');
     });
 });
 
 
 // Generate workers
-const numberOfWorkers = 5;
+const numberOfWorkers = 2;
 
 const inspectorWorkerScheduleList: WorkSchedule[] = [];
 for (let i = 0; i < numberOfWorkers; i++) {
