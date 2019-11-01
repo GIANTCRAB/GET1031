@@ -35,6 +35,14 @@ export class Area {
         return this.center;
     }
 
+    public distanceTo(otherArea: Area): number {
+        if (this.getCenter() !== null && otherArea.getCenter() !== null) {
+            return this.getCenter().distanceTo(otherArea.getCenter()) * 150;
+        }
+
+        return 0;
+    }
+
     public toArray(): Point[] {
         return Array.from(this.points);
     }
