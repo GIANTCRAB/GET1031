@@ -36,11 +36,21 @@ export class Area {
     }
 
     public distanceTo(otherArea: Area): number {
-        if (this.getCenter() !== null && otherArea.getCenter() !== null) {
+        if (this !== otherArea && this.getCenter() !== null && otherArea.getCenter() !== null) {
             return this.getCenter().distanceTo(otherArea.getCenter()) * 150;
         }
 
         return 0;
+    }
+
+    public travelTimeTo(otherArea: Area): number {
+        if (this === otherArea) {
+            // Same area has no travel time
+            return 0;
+        }
+        // Min travel time: 1 hour
+        const MIN_TRAVEL_TIME = 1;
+        return Math.max(Math.floor(this.distanceTo(otherArea) * 0.1), MIN_TRAVEL_TIME);
     }
 
     public toArray(): Point[] {
