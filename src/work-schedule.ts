@@ -38,7 +38,7 @@ export class WorkSchedule {
             this.workUnitList.add(travelData);
         }
         if (remainingHours < 0) {
-            // need to break up workload
+            // NEGATIVE hours - need to break up workload
             const hoursInspected = location.getRemainingHoursToInspect() + remainingHours;
             const workData: WorkUnitInterface = new WorkData(location, inspectorWorker, day, hoursInspected);
             location.inspect(hoursInspected);
@@ -78,6 +78,18 @@ export class WorkSchedule {
                 // a must be equal to b
                 return 0;
             });
+    }
+
+    public getWorkSchedule(): WorkUnitInterface[][] {
+        const workUnitInterface: WorkUnitInterface[][] = [[]];
+        Array.from(this.workUnitList).forEach((workUnit: WorkUnitInterface) => {
+            if (!workUnitInterface[workUnit.day]) {
+                workUnitInterface[workUnit.day] = [];
+            }
+            workUnitInterface[workUnit.day].push(workUnit);
+        });
+
+        return workUnitInterface;
     }
 
     private getLastWorkDataForDay(inspectorWorker: InspectorWorker, day: number): WorkData {
