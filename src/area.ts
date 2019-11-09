@@ -11,6 +11,10 @@ export class Area {
         return totalCases;
     }
 
+    public getInspectionFrequency(): number {
+        return Math.ceil(this.getAreaCases() / 10);
+    }
+
     public addPoint(point: Point): Area {
         this.points = this.points.add(point);
         this.center = this.calculateCenter();

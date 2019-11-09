@@ -97,6 +97,39 @@ stringify(areaOutputData, {}, (err, output) => {
     });
 });
 
+// Generate distance table for locations based on area
+const areaPointOutputData: string[][] = [];
+const areaListPointAreasCopy = new Set(areaList.areas);
+areaList.areas.forEach((area: Area) => {
+    areaListPointAreasCopy.forEach((otherArea: Area) => {
+        if (area !== otherArea) {
+            const travelTime = area.travelTimeTo(otherArea);
+            const areaPointListCopy = new Set(otherArea.points);
+            area.points.forEach((point: Point) => {
+                otherArea.points.forEach((otherPoint: Point) => {
+                    areaPointOutputData.push([
+                        point.name,
+                        otherPoint.name,
+                        travelTime.toString()
+                    ]);
+                });
+
+                // Remove it from list since it is already in distance table
+                areaPointListCopy.delete(point);
+            });
+        }
+    });
+    // Remove it from list since it is already in distance table
+    areaListPointAreasCopy.delete(area);
+});
+
+stringify(areaPointOutputData, {}, (err, output) => {
+    if (err) throw err;
+    fs.writeFile('area-point-table.csv', output, (err) => {
+        if (err) throw err;
+        console.log('area-point-table.csv saved.');
+    });
+});
 
 // Generate workers
 const numberOfWorkers = 5;
@@ -120,24 +153,26 @@ stringify(areaList.toArray(), {}, (err, output) => {
 
 // loop through sorted areas, which are sorted by number of cases in area
 areaList.getSortedAreas().forEach((area: Area) => {
-    area.points.forEach((point: Point) => {
-        // loop through days
-        let currentDay = 1;
-        let availableWorkerSchedule: WorkSchedule = null;
+    for (let i = 0; i < area.getInspectionFrequency(); i++) {
+        area.points.forEach((point: Point) => {
+            // loop through days
+            let currentDay = 1;
+            let availableWorkerSchedule: WorkSchedule = null;
 
-        while (availableWorkerSchedule === null) {
-            inspectorWorkerScheduleList.every((inspectorWorkerSchedule: WorkSchedule) => {
-                if (inspectorWorkerSchedule.canWork(currentDay, area, point)) {
-                    availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, area, point);
-                    return false;
-                }
+            while (availableWorkerSchedule === null) {
+                inspectorWorkerScheduleList.every((inspectorWorkerSchedule: WorkSchedule) => {
+                    if (inspectorWorkerSchedule.canWork(currentDay, area, point)) {
+                        availableWorkerSchedule = inspectorWorkerSchedule.work(currentDay, area, point);
+                        return false;
+                    }
 
-                return true;
-            });
-            // go next day since no workers can work on the current day
-            currentDay++;
-        }
-    });
+                    return true;
+                });
+                // go next day since no workers can work on the current day
+                currentDay++;
+            }
+        });
+    }
 });
 
 // Generate schedule
