@@ -5,6 +5,16 @@ export interface LocationInterface {
 
     getName(): string;
 
+    getNumberOfCases(): number;
+
+    getInspectionFrequency(): number;
+
+    getInspectionCount(): number;
+
+    canReinspect(): boolean;
+
+    reinspect(): void;
+
     getHoursRequiredToInspect(): number;
 
     getRemainingHoursToInspect(): number;
