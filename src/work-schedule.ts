@@ -1,42 +1,74 @@
 import {WorkData} from "./work-data";
 import {InspectorWorker} from "./inspector-worker";
-import {Point} from "./point";
-import {Area} from "./area";
+import {WorkUnitInterface} from "./work-unit-interface";
+import {LocationInterface} from "./location-interface";
+import {TravelData} from "./travel-data";
 
 export class WorkSchedule {
-    public workDataList: Set<WorkData> = new Set<WorkData>();
-    public worker: InspectorWorker;
+    public workUnitList: Set<WorkUnitInterface> = new Set<WorkUnitInterface>();
     public maxWorkHoursPerDay: number = 8;
 
-    public canWork(day: number, area: Area, point: Point): boolean {
-        const lastWorkDataForDay = this.getLastWorkDataForDay(day);
-        let travelHoursToArea = 0;
-        if (lastWorkDataForDay !== null) {
+    public canWork(inspectorWorker: InspectorWorker, day: number, location: LocationInterface): boolean {
+        const lastWorkUnitForDay = this.getLastWorkDataForDay(inspectorWorker, day);
+        let travelHours = 0;
+        if (lastWorkUnitForDay !== null) {
             // Check area travel distance/time
-            travelHoursToArea = lastWorkDataForDay.area.travelTimeTo(area);
+            travelHours = lastWorkUnitForDay.location.getTravelTimeTo(location);
         }
-        return this.getTotalWorkAndTravelHoursForDay(day) + travelHoursToArea + point.hoursRequiredToInspect <= this.maxWorkHoursPerDay;
+
+        // make sure travel time doesn't take up everything
+        const totalWorkUnitHoursForDay = this.getTotalWorkUnitHoursForDay(inspectorWorker, day);
+        const totalHoursForDayAndNewLocationTravel = totalWorkUnitHoursForDay + travelHours;
+        return totalHoursForDayAndNewLocationTravel < this.maxWorkHoursPerDay;
     }
 
-    public getTotalWorkAndTravelHoursForDay(day: number): number {
-        return this.getTotalWorkHoursForDay(day) + this.getTotalTravelHoursForDay(day);
+    public workAndGetRemainingHours(inspectorWorker: InspectorWorker, day: number, location: LocationInterface): number {
+        const lastWorkUnitForDay = this.getLastWorkDataForDay(inspectorWorker, day);
+        let travelHours = 0;
+        if (lastWorkUnitForDay !== null) {
+            // Check area travel distance/time
+            travelHours = lastWorkUnitForDay.location.getTravelTimeTo(location);
+        }
+
+        const totalWorkUnitHoursForDay = this.getTotalWorkUnitHoursForDay(inspectorWorker, day);
+        // check for remaining hours
+        const remainingHours = this.maxWorkHoursPerDay - (totalWorkUnitHoursForDay + travelHours + location.getRemainingHoursToInspect());
+        if (lastWorkUnitForDay !== null) {
+            const travelData: WorkUnitInterface = new TravelData(lastWorkUnitForDay.location, location, inspectorWorker, day);
+            this.workUnitList.add(travelData);
+        }
+        if (remainingHours < 0) {
+            // need to break up workload
+            const hoursInspected = location.getRemainingHoursToInspect() + remainingHours;
+            const workData: WorkUnitInterface = new WorkData(location, inspectorWorker, day, hoursInspected);
+            location.inspect(hoursInspected);
+            this.workUnitList.add(workData);
+        } else {
+            const workData: WorkUnitInterface = new WorkData(location, inspectorWorker, day, location.getRemainingHoursToInspect());
+            location.inspectFully();
+            this.workUnitList.add(workData);
+        }
+
+        return remainingHours;
     }
 
-    public work(day: number, area: Area, point: Point): WorkSchedule {
-        const workData: WorkData = new WorkData();
-        workData.day = day;
-        workData.area = area;
-        workData.point = point;
-        this.workDataList = this.workDataList.add(workData);
-        return this;
+    public getTotalWorkUnitHoursForDay(inspectorWorker: InspectorWorker, day: number): number {
+        let totalWorkUnitHoursForDay = 0;
+        this.workUnitList.forEach((workUnit: WorkUnitInterface) => {
+            if (workUnit.day === day && workUnit.inspectorWorker === inspectorWorker) {
+                totalWorkUnitHoursForDay += workUnit.getHours();
+            }
+        });
+
+        return totalWorkUnitHoursForDay;
     }
 
     /**
      * Sort by day
      */
-    public getSortedWorkData(): WorkData[] {
-        return Array.from(this.workDataList)
-            .sort((a: WorkData, b: WorkData) => {
+    public getSortedWorkData(): WorkUnitInterface[] {
+        return Array.from(this.workUnitList)
+            .sort((a: WorkUnitInterface, b: WorkUnitInterface) => {
                 if (a.day < b.day) {
                     return -1;
                 }
@@ -48,40 +80,14 @@ export class WorkSchedule {
             });
     }
 
-    private getTotalWorkHoursForDay(day: number): number {
-        let totalWorkHoursForDay = 0;
-        this.workDataList.forEach((workData: WorkData) => {
-            if (workData.day === day) {
-                totalWorkHoursForDay += workData.getWorkHours();
+    private getLastWorkDataForDay(inspectorWorker: InspectorWorker, day: number): WorkData {
+        let lastWorkUnit: WorkData = null;
+        this.workUnitList.forEach((workUnit: WorkUnitInterface) => {
+            if (workUnit instanceof WorkData && workUnit.day === day && workUnit.inspectorWorker === inspectorWorker) {
+                lastWorkUnit = workUnit;
             }
         });
 
-        return totalWorkHoursForDay;
-    }
-
-    private getLastWorkDataForDay(day: number): WorkData {
-        let lastWorkData: WorkData = null;
-        this.workDataList.forEach((workData: WorkData) => {
-            if (workData.day === day) {
-                lastWorkData = workData;
-            }
-        });
-
-        return lastWorkData;
-    }
-
-    private getTotalTravelHoursForDay(day: number): number {
-        let totalTravelHoursForDay = 0;
-        let previousWorkData: WorkData = null;
-        this.workDataList.forEach((workData: WorkData) => {
-            if (workData.day === day) {
-                if (previousWorkData !== null) {
-                    totalTravelHoursForDay += workData.area.travelTimeTo(previousWorkData.area);
-                }
-                previousWorkData = workData;
-            }
-        });
-
-        return totalTravelHoursForDay;
+        return lastWorkUnit;
     }
 }
