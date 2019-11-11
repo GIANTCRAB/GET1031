@@ -9,7 +9,7 @@ export class Location implements LocationInterface {
     private hoursInspected: number = 0;
     private inspectionCount: number = 0;
 
-    constructor(point: PointInterface, name: string, numberOfCases: number, hoursRequiredToInspect: number) {
+    constructor(point: PointInterface, name: string, hoursRequiredToInspect: number, numberOfCases: number) {
         this.point = point;
         this.name = name;
         this.numberOfCases = numberOfCases;
@@ -30,7 +30,7 @@ export class Location implements LocationInterface {
 
     public getInspectionFrequency(): number {
         const MIN_INSPECTION_FREQUENCY = 1;
-        return Math.max(MIN_INSPECTION_FREQUENCY, Math.floor(this.getNumberOfCases() / 10));
+        return Math.floor(this.getNumberOfCases() / 10) + MIN_INSPECTION_FREQUENCY;
     }
 
     public getInspectionCount(): number {
@@ -51,7 +51,7 @@ export class Location implements LocationInterface {
     }
 
     public getRemainingHoursToInspect(): number {
-        return this.hoursRequiredToInspect - this.hoursInspected;
+        return this.getHoursRequiredToInspect() - this.hoursInspected;
     }
 
     public getTravelTimeTo(otherLocation: LocationInterface): number {
