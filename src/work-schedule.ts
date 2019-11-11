@@ -12,6 +12,9 @@ export class WorkSchedule {
         const lastWorkUnitForDay = this.getLastWorkDataForDay(inspectorWorker, day);
         let travelHours = 0;
         if (lastWorkUnitForDay !== null) {
+            if (lastWorkUnitForDay.location === location) {
+                return false;
+            }
             // Check area travel distance/time
             travelHours = lastWorkUnitForDay.location.getTravelTimeTo(location);
         }
@@ -32,14 +35,15 @@ export class WorkSchedule {
 
         const totalWorkUnitHoursForDay = this.getTotalWorkUnitHoursForDay(inspectorWorker, day);
         // check for remaining hours
-        const remainingHours = this.maxWorkHoursPerDay - (totalWorkUnitHoursForDay + travelHours + location.getRemainingHoursToInspect());
-        if (lastWorkUnitForDay !== null) {
+        const workerRemainingHours = this.maxWorkHoursPerDay - (totalWorkUnitHoursForDay + travelHours + location.getRemainingHoursToInspect());
+        if (lastWorkUnitForDay !== null && lastWorkUnitForDay.location !== location) {
             const travelData: WorkUnitInterface = new TravelData(lastWorkUnitForDay.location, location, inspectorWorker, day);
             this.workUnitList.add(travelData);
         }
-        if (remainingHours < 0) {
+        if (workerRemainingHours < 0) {
             // NEGATIVE hours - need to break up workload
-            const hoursInspected = location.getRemainingHoursToInspect() + remainingHours;
+            // retrieve hours that left to inspect
+            const hoursInspected = location.getRemainingHoursToInspect() + workerRemainingHours;
             const workData: WorkUnitInterface = new WorkData(location, inspectorWorker, day, hoursInspected);
             location.inspect(hoursInspected);
             this.workUnitList.add(workData);
@@ -49,7 +53,7 @@ export class WorkSchedule {
             this.workUnitList.add(workData);
         }
 
-        return remainingHours;
+        return workerRemainingHours;
     }
 
     public getTotalWorkUnitHoursForDay(inspectorWorker: InspectorWorker, day: number): number {
@@ -61,23 +65,6 @@ export class WorkSchedule {
         });
 
         return totalWorkUnitHoursForDay;
-    }
-
-    /**
-     * Sort by day
-     */
-    public getSortedWorkData(): WorkUnitInterface[] {
-        return Array.from(this.workUnitList)
-            .sort((a: WorkUnitInterface, b: WorkUnitInterface) => {
-                if (a.day < b.day) {
-                    return -1;
-                }
-                if (a.day > b.day) {
-                    return 1;
-                }
-                // a must be equal to b
-                return 0;
-            });
     }
 
     public getWorkSchedule(): WorkUnitInterface[][] {

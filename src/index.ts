@@ -76,17 +76,25 @@ for (let i = 0; i < numberOfWorkers; i++) {
 const workSchedule = new WorkSchedule();
 
 // loop through sorted areas, which are sorted by number of cases in area
-locationList.getByPriority().forEach((location: LocationInterface) => {
+const locationListPriorityQueue = locationList.getPriorityQueue();
+while (locationListPriorityQueue.length !== 0) {
+    const retrievedLocation: LocationInterface = locationListPriorityQueue.dequeue();
     // loop through days
     let currentDay = 1;
-    let remainingHours = -(location.getRemainingHoursToInspect());
+    let remainingHours = -(retrievedLocation.getRemainingHoursToInspect());
+    let inspectionCompleted = false;
 
-    while (remainingHours < 0) {
+    while (!inspectionCompleted) {
         inspectorWorkerList.every((inspectorWorker: InspectorWorker) => {
-            if (workSchedule.canWork(inspectorWorker, currentDay, location)) {
-                remainingHours = workSchedule.workAndGetRemainingHours(inspectorWorker, currentDay, location);
+            if (workSchedule.canWork(inspectorWorker, currentDay, retrievedLocation)) {
+                remainingHours = workSchedule.workAndGetRemainingHours(inspectorWorker, currentDay, retrievedLocation);
                 if (remainingHours >= 0) {
                     // work completed
+                    if (retrievedLocation.canReinspect()) {
+                        retrievedLocation.reinspect();
+                        locationListPriorityQueue.queue(retrievedLocation);
+                    }
+                    inspectionCompleted = true;
                     return false;
                 }
             }
@@ -96,7 +104,7 @@ locationList.getByPriority().forEach((location: LocationInterface) => {
         // go next day since no workers can work on the current day
         currentDay++;
     }
-});
+}
 
 // Generate schedule
 const scheduleData: string[][] = [];
@@ -108,7 +116,8 @@ workSchedule.getWorkSchedule().forEach((workUnitForDay: WorkUnitInterface[]) => 
                 "WORK",
                 "DAY " + workData.day,
                 workData.inspectorWorker.id.toString(),
-                workData.location.getName(),
+                "LOCATION: " + workData.location.getName(),
+                "",
                 "HOURS: " + workData.getHours().toString()
             ]);
         }
@@ -118,8 +127,8 @@ workSchedule.getWorkSchedule().forEach((workUnitForDay: WorkUnitInterface[]) => 
                 "TRAVEL",
                 "DAY " + travelData.day,
                 travelData.inspectorWorker.id.toString(),
-                travelData.startLocation.getName(),
-                travelData.endLocation.getName(),
+                "START LOCATION: " + travelData.startLocation.getName(),
+                "END LOCATION: " + travelData.endLocation.getName(),
                 "HOURS: " + travelData.getHours().toString()
             ]);
         }

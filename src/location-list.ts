@@ -28,7 +28,6 @@ export class LocationList {
 
     public getPriorityQueue(): PriorityQueue<LocationInterface> {
         const priorityList = this.getByPriority();
-        const maxInspectionFrequency = priorityList[0].getInspectionFrequency();
         const priorityQueue = new PriorityQueue({
             comparator: (a: LocationInterface, b: LocationInterface) => {
                 if (a.getInspectionCount() < b.getInspectionCount()) {
@@ -50,13 +49,7 @@ export class LocationList {
             }
         });
 
-        for (let i = 0; i < maxInspectionFrequency; i++) {
-            priorityList.forEach((location: LocationInterface) => {
-                if (i < location.getInspectionFrequency()) {
-                    priorityQueue.queue(location);
-                }
-            });
-        }
+        priorityList.forEach((location: LocationInterface) => priorityQueue.queue(location));
 
         return priorityQueue;
     }
